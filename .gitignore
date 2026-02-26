@@ -1,0 +1,16 @@
+# Secrets Streamlit - NE JAMAIS COMMIT
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
