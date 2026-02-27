@@ -1,6 +1,8 @@
 import streamlit as st
 from groq import Groq
 from datetime import datetime
+import json 
+
 
 # ─────────────────────────────────────────────────────────────
 # 1. CONFIGURATION PAGE
@@ -97,12 +99,12 @@ with st.sidebar:
         filename = f"conversation_{timestamp}.json"
     
     # Créer un fichier JSON téléchargeable
-    st.download_button(
-        label="📥 Télécharger en JSON",
-        data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
-        file_name=filename,
-        mime="application/json"
-    )
+        st.download_button(
+            label="📥 Télécharger en JSON",
+            data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
+            file_name=filename,
+            mime="application/json"
+        )
     
     # 📁 Upload
     st.divider()
