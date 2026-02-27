@@ -4,11 +4,6 @@ from datetime import datetime
 import json 
 
 
-HEAD
-
-
-061f79b7252c2d50575efa5cd400ea246f24eeea
-
 # ─────────────────────────────────────────────────────────────
 # 1. CONFIGURATION PAGE
 # ─────────────────────────────────────────────────────────────
@@ -98,18 +93,20 @@ with st.sidebar:
     st.divider()
 
     if st.button("📥 Exporter la conversation", use_container_width=True):
-        import json
-        from datetime import datetime
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"conversation_{timestamp}.json"
-    
-    # Créer un fichier JSON téléchargeable
-        st.download_button(
-            label="📥 Télécharger en JSON",
-            data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
-            file_name=filename,
-            mime="application/json"
-        )
+        try:
+            import json  # Import local pour sécurité
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            st.download_button(
+                label="📥 Télécharger JSON",
+                data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
+                file_name=f"conversation_{timestamp}.json",
+                mime="application/json",
+                use_container_width=True
+            )
+        except Exception as e:
+            st.error(f"❌ Erreur export: {str(e)[:100]}")
     
     # 📁 Upload
     st.divider()
