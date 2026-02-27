@@ -61,6 +61,15 @@ with st.sidebar:
     model_choice = st.selectbox("🧠 Modèle", ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "openai/gpt-oss-20b"])
     
     st.divider()
+
+    if groq_key and groq_key.startswith("gsk_"):
+        if st.button("🧪 Tester la clé API", use_container_width=True):
+            try:
+                test_client = Groq(api_key=groq_key)
+                test_client.models.list()
+                st.success("✅ Clé API valide !")
+            except Exception as e:
+                st.error(f"❌ Clé invalide: {str(e)[:100]}")
     
     # 📊 Stats
     st.subheader("📊 Statistiques")
@@ -80,6 +89,20 @@ with st.sidebar:
         st.rerun()
     
     st.divider()
+
+    if st.button("📥 Exporter la conversation", use_container_width=True):
+        import json
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"conversation_{timestamp}.json"
+    
+    # Créer un fichier JSON téléchargeable
+    st.download_button(
+        label="📥 Télécharger en JSON",
+        data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
+        file_name=filename,
+        mime="application/json"
+    )
     
     # 📁 Upload
     st.divider()
@@ -136,6 +159,12 @@ if prompt:
     
     if not groq_key or not groq_key.startswith("gsk_"):
         st.error("⚠️ Clé Groq requise")
+        st.stop()
+    
+     # 2️⃣ ✅ NOUVEAU : Vérification du modèle (INSÉREZ CECI)
+    valid_models = ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "openai/gpt-oss-20b", "mixtral-8x7b-32768"]
+    if model_choice not in valid_models:
+        st.error(f"⚠️ Modèle '{model_choice}' non valide. Modèles disponibles: {', '.join(valid_models)}")
         st.stop()
     
     # Préparer le contexte fichier si présent
