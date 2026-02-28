@@ -83,30 +83,30 @@ with st.sidebar:
     c2.metric("💰 Coût", f"${stats['total_cost']:.6f}")
     st.caption(f"🕐 Depuis : {stats['last_reset']}")
     
-    #if st.button("🔄 Reset", use_container_width=True):
-        #st.session_state.token_stats = {
-            #"total_input": 0, "total_output": 0, "total_cost": 0.0,
-            #"requests": 0, "last_reset": datetime.now().strftime("%Y-%m-%d %H:%M")
-        #}
-       # st.rerun()
+    if st.button("🔄 Reset", use_container_width=True):
+        st.session_state.token_stats = {
+            "total_input": 0, "total_output": 0, "total_cost": 0.0,
+            "requests": 0, "last_reset": datetime.now().strftime("%Y-%m-%d %H:%M")
+        }
+        st.rerun()
     
     st.divider()
 
-    if st.button("📥 Exporter la conversation", use_container_width=True):
-        try:
-            import json  # Import local pour sécurité
-            from datetime import datetime
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #if st.button("📥 Exporter la conversation", use_container_width=True):
+        #try:
+           # import json  # Import local pour sécurité
+            #from datetime import datetime
+           # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
-            st.download_button(
-                label="📥 Télécharger JSON",
-                data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
-                file_name=f"conversation_{timestamp}.json",
-                mime="application/json",
-                use_container_width=True
-            )
-        except Exception as e:
-            st.error(f"❌ Erreur export: {str(e)[:100]}")
+           # st.download_button(
+               # label="📥 Télécharger JSON",
+               # data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
+                #file_name=f"conversation_{timestamp}.json",
+               # mime="application/json",
+                #use_container_width=True
+            #)
+       # except Exception as e:
+            #st.error(f"❌ Erreur export: {str(e)[:100]}")
     
     # 📁 Upload
     st.divider()
