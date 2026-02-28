@@ -1,9 +1,47 @@
-
 import streamlit as st
 from groq import Groq
 from datetime import datetime
 import json 
-##
+
+def check_password():
+    """Version personnalisée"""
+    
+    def password_entered():
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]
+        else:
+            st.session_state["password_correct"] = False
+    
+    if "password_correct" not in st.session_state:
+        # Page de login personnalisée
+        st.title("🔒 Accès Restreint")
+        st.write("Veuillez entrer le mot de passe pour accéder à l'application.")
+        
+        st.text_input(
+            "🔑 Mot de passe",
+            type="password",
+            on_change=password_entered,
+            key="password"
+        )
+        return False
+    elif not st.session_state["password_correct"]:
+        st.error("❌ Mot de passe incorrect !")
+        st.text_input(
+            "🔑 Réessayez",
+            type="password",
+            on_change=password_entered,
+            key="password"
+        )
+        return False
+    else:
+        return True
+#──────────────────────────────────────────────────────────
+# 🔐 VÉRIFICATION DU MOT DE PASSE
+# ─────────────────────────────────────────────────────────────
+if not check_password():
+    st.stop()  # Arrête l'app si le mot de passe est incorrect
+
 
 # ─────────────────────────────────────────────────────────────
 # 1. CONFIGURATION PAGE
@@ -91,6 +129,25 @@ with st.sidebar:
         }
         st.rerun()
     
+    st.divider()
+
+    #if st.button("📥 Exporter la conversation", use_container_width=True):
+        #try:
+            #import json  # Import local pour sécurité
+            #from datetime import datetime
+            #timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            #st.download_button(
+                #label="📥 Télécharger JSON",
+                #data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
+                #file_name=f"conversation_{timestamp}.json",
+                #mime="application/json",
+                #use_container_width=True
+            #)
+        #except Exception as e:
+            #st.error(f"❌ Erreur export: {str(e)[:100]}")
+    
+    # 📁 Upload
     st.divider()
     
     # 📁 Upload de fichiers
@@ -208,3 +265,5 @@ if prompt:
             
         except Exception as e:
             st.error(f"❌ Erreur: {str(e)[:150]}")
+
+
