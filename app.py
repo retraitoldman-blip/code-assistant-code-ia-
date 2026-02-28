@@ -93,21 +93,21 @@ with st.sidebar:
     
     st.divider()
 
-    if st.button("📥 Exporter la conversation", use_container_width=True):
-        try:
-            import json  # Import local pour sécurité
-            from datetime import datetime
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #if st.button("📥 Exporter la conversation", use_container_width=True):
+       # try:
+           # import json  # Import local pour sécurité
+           # from datetime import datetime
+           # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
-            st.download_button(
-                label="📥 Télécharger JSON",
-                data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
-                file_name=f"conversation_{timestamp}.json",
-                mime="application/json",
-                use_container_width=True
-            )
-        except Exception as e:
-            st.error(f"❌ Erreur export: {str(e)[:100]}")
+           # st.download_button(
+                #label="📥 Télécharger JSON",
+               # data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
+              #  file_name=f"conversation_{timestamp}.json",
+              #  mime="application/json",
+              #  use_container_width=True
+           # )
+       # except Exception as e:
+            #st.error(f"❌ Erreur export: {str(e)[:100]}")
     
     # 📁 Upload
     st.divider()
