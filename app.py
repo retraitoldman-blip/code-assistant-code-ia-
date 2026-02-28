@@ -95,7 +95,7 @@ with st.sidebar:
 
     if st.button("📥 Exporter la conversation", use_container_width=True):
         try:
-            import json  
+            import json #import par défaut 
             from datetime import datetime
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
