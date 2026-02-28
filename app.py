@@ -2,8 +2,7 @@
 import streamlit as st
 from groq import Groq
 from datetime import datetime
-import json
-
+import json 
 
 
 # ─────────────────────────────────────────────────────────────
@@ -96,7 +95,7 @@ with st.sidebar:
 
     if st.button("📥 Exporter la conversation", use_container_width=True):
         try:
-            
+            import json  # Import local pour sécurité
             from datetime import datetime
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
