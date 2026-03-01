@@ -93,39 +93,7 @@ def get_username():
 # ─────────────────────────────────────────────────────────────
 if not authenticate():
     st.stop()
-def check_password():
-    """Version personnalisée"""
-     
-    def password_entered():
-        if st.session_state["password"] == st.secrets["admin_password"]:
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]
-        else:
-            st.session_state["password_correct"] = False
-    
-    if "password_correct" not in st.session_state:
-        # Page de login personnalisée
-        st.title("🔒 Accès Restreint")
-        st.write("Veuillez entrer le mot de passe pour accéder à l'application.")
-        
-        st.text_input(
-            "🔑 Mot de passe",
-            type="password",
-            on_change=password_entered,
-            key="password"
-        )
-        return False
-    elif not st.session_state["password_correct"]:
-        st.error("❌ Mot de passe incorrect !")
-        st.text_input(
-            "🔑 Réessayez",
-            type="password",
-            on_change=password_entered,
-            key="password"
-        )
-        return False
-    else:
-        return True
+
 #──────────────────────────────────────────────────────────
 # 🔐 VÉRIFICATION DU MOT DE PASSE
 # ─────────────────────────────────────────────────────────────
