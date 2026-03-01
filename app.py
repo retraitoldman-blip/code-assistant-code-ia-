@@ -94,12 +94,6 @@ def get_username():
 if not authenticate():
     st.stop()
 
-#──────────────────────────────────────────────────────────
-# 🔐 VÉRIFICATION DU MOT DE PASSE
-# ─────────────────────────────────────────────────────────────
-if not check_password():
-    st.stop()  # Arrête l'app si le mot de passe est incorrect
-
 
 # ─────────────────────────────────────────────────────────────
 # 1. CONFIGURATION PAGE
