@@ -19,7 +19,7 @@ def authenticate():
             st.session_state["username"] = "Administrateur"
             st.success("✅ Connecté en tant qu'Administrateur")
         # Vérifie si c'est un utilisateur valide
-        elif entered_code in st.secrets.get("user_codes", ["PUBLIC2026"]):
+        elif entered_code in st.secrets.get("user_codes", ""):
             st.session_state["authenticated"] = True
             st.session_state["is_admin"] = False
             st.session_state["username"] = "Utilisateur"
@@ -95,9 +95,9 @@ if not authenticate():
     st.stop()
 def check_password():
     """Version personnalisée"""
-    
+     
     def password_entered():
-        if st.session_state["password"] == st.secrets["password"]:
+        if st.session_state["password"] == st.secrets["admin_password"]:
             st.session_state["password_correct"] = True
             del st.session_state["password"]
         else:
@@ -217,7 +217,7 @@ with st.sidebar:
         # Gestion des utilisateurs
         with st.expander("👥 Gestion Utilisateurs", expanded=False):
             st.write("**Codes utilisateurs actifs :**")
-            for code in st.secrets.get("user_codes", ["PUBLIC2026"]):
+            for code in st.secrets.get("user_codes", ""):
                 st.text(f"• {code}")
             st.caption("Pour ajouter/supprimer des codes, modifiez les secrets.")
         
