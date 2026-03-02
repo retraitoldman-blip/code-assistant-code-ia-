@@ -9,22 +9,25 @@ import json
 # 🎤 COMPOSANT SPEECH-TO-TEXT (Web Speech API)
 # ─────────────────────────────────────────────────────────────
 
-def add_microphone_hint():
-    """Ajoute un indice visuel pour la reconnaissance vocale"""
-    st.info("""
-    **🎤 Astuce : Dictée vocale native**
-    
-    Sur Chrome/Edge/Safari :
-    1. Clique dans le champ de chat
-    2. Appuie sur **Ctrl+Shift+.** (Windows) ou **Cmd+Shift+.** (Mac)
-    3. Parle : le texte s'écrit automatiquement !
-    
-    *Fonctionnalité native du navigateur - aucune config requise*
-    """)
+
 
 # Appeler cette fonction dans la sidebar
 with st.sidebar:
-    add_microphone_hint()
+
+
+    def add_microphone_hint():
+        """Affiche une astuce pour la dictée vocale native"""
+        st.info("""
+        **🎤 Dictée vocale native**
+    
+        Sur Chrome/Edge/Safari :
+        • Clique dans le champ de chat
+        • Appuie sur **Ctrl+Shift+.** (Windows) 
+          ou **Cmd+Shift+.** (Mac)
+        • Parle : le texte s'écrit automatiquement !
+    
+        *Fonctionnalité du navigateur - zéro config*
+        """)
 
 def authenticate():
     """Gère l'authentification Admin vs Utilisateur"""
@@ -297,8 +300,10 @@ if "auto_analyze_prompt" in st.session_state:
     del st.session_state.auto_analyze_prompt  # Nettoyer après utilisation
     auto_trigger = True
 else:
-    prompt = speech_to_text_input(key="user_question")
-    auto_trigger = False
+    prompt = st.chat_input(
+    "Pose ta question... (💡 Ctrl+Shift+. pour dicter)", 
+    key="user_question"
+    )
 
 # Si prompt existe (manuel ou auto)
 groq_key = st.secrets.get("groq_api_key", "")
