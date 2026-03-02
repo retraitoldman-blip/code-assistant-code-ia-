@@ -1,4 +1,5 @@
-        
+
+
 import streamlit as st
 from groq import Groq
 from datetime import datetime
@@ -8,166 +9,22 @@ import json
 # 🎤 COMPOSANT SPEECH-TO-TEXT (Web Speech API)
 # ─────────────────────────────────────────────────────────────
 
-def speech_to_text_input(key="speech_input"):
-    """
-    Crée un champ de texte avec bouton microphone pour la reconnaissance vocale.
-    Utilise l'API Web Speech native du navigateur.
-    """
+def add_microphone_hint():
+    """Ajoute un indice visuel pour la reconnaissance vocale"""
+    st.info("""
+    **🎤 Astuce : Dictée vocale native**
     
-    # HTML + JavaScript pour la reconnaissance vocale
-    st.markdown("""
-        <style>
-        .stTextInput input {
-            padding-right: 50px !important;
-        }
-        .mic-btn {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2em;
-            padding: 5px;
-            z-index: 100;
-        }
-        .mic-btn.listening {
-            color: #ff4444;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: translateY(-50%) scale(1); }
-            50% { transform: translateY(-50%) scale(1.2); }
-            100% { transform: translateY(-50%) scale(1); }
-        }
-        </style>
-        
-        <script>
-        // Fonction pour initialiser la reconnaissance vocale
-        function initSpeechRecognition(inputId) {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert("❌ Votre navigateur ne supporte pas la reconnaissance vocale.\n\nUtilisez Chrome, Edge ou Safari.");
-                return;
-            }
-            
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            
-            recognition.lang = 'fr-FR';  // Langue française
-            recognition.interimResults = true;
-            recognition.continuous = false;
-            
-            let isListening = false;
-            let inputElement = document.querySelector(`input[id*="${inputId}"]`);
-            
-            if (!inputElement) {
-                // Essaye de trouver l'input par label
-                const labels = document.querySelectorAll('label');
-                for (let label of labels) {
-                    if (label.textContent.includes('Question') || label.textContent.includes('question')) {
-                        inputElement = label.nextElementSibling?.querySelector('input');
-                        if (inputElement) break;
-                    }
-                }
-            }
-            
-            recognition.onstart = function() {
-                isListening = true;
-                const micBtn = document.querySelector(`.mic-btn[data-target="${inputId}"]`);
-                if (micBtn) micBtn.classList.add('listening');
-            };
-            
-            recognition.onresult = function(event) {
-                let transcript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    transcript += event.results[i][0].transcript;
-                }
-                if (inputElement) {
-                    // Met à jour la valeur et déclenche l'événement change pour Streamlit
-                    inputElement.value = transcript;
-                    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            };
-            
-            recognition.onend = function() {
-                isListening = false;
-                const micBtn = document.querySelector(`.mic-btn[data-target="${inputId}"]`);
-                if (micBtn) micBtn.classList.remove('listening');
-            };
-            
-            recognition.onerror = function(event) {
-                console.error("Erreur reconnaissance vocale:", event.error);
-                isListening = false;
-                const micBtn = document.querySelector(`.mic-btn[data-target="${inputId}"]`);
-                if (micBtn) micBtn.classList.remove('listening');
-                if (event.error === 'not-allowed') {
-                    alert("❌ Microphone bloqué. Veuillez autoriser l'accès au micro.");
-                }
-            };
-            
-            // Toggle écoute
-            function toggleListening() {
-                if (!inputElement) {
-                    alert("⚠️ Champ de texte non trouvé. Veuillez recharger la page.");
-                    return;
-                }
-                if (isListening) {
-                    recognition.stop();
-                } else {
-                    // Demande la permission microphone
-                    navigator.mediaDevices.getUserMedia({ audio: true })
-                        .then(() => recognition.start())
-                        .catch(err => {
-                            console.error("Erreur microphone:", err);
-                            alert("❌ Impossible d'accéder au microphone. Vérifiez les permissions.");
-                        });
-                }
-            }
-            
-            // Attache la fonction au bouton microphone
-            const micBtn = document.querySelector(`.mic-btn[data-target="${inputId}"]`);
-            if (micBtn) {
-                micBtn.onclick = toggleListening;
-            }
-            
-            return { recognition, toggleListening };
-        }
-        
-        // Initialisation au chargement
-        document.addEventListener('DOMContentLoaded', function() {
-            // Délai pour laisser Streamlit rendre les éléments
-            setTimeout(() => {
-                initSpeechRecognition("${key}");
-            }, 1000);
-        });
-        </script>
-        """, unsafe_allow_html=True)
+    Sur Chrome/Edge/Safari :
+    1. Clique dans le champ de chat
+    2. Appuie sur **Ctrl+Shift+.** (Windows) ou **Cmd+Shift+.** (Mac)
+    3. Parle : le texte s'écrit automatiquement !
     
-    # Champ de texte Streamlit avec bouton microphone injecté via JS
-    prompt = st.chat_input("Pose ta question... (ou clique sur 🎤 pour parler)", key=key)
-    
-    # Injecte le bouton microphone après le rendu du champ
-    st.markdown(f"""
-        <script>
-        setTimeout(() => {{
-            const inputs = document.querySelectorAll('input[id*="{key}"]');
-            inputs.forEach(input => {{
-                if (!input.parentElement.querySelector('.mic-btn')) {{
-                    const micBtn = document.createElement('button');
-                    micBtn.className = 'mic-btn';
-                    micBtn.setAttribute('data-target', '{key}');
-                    micBtn.innerHTML = '🎤';
-                    micBtn.title = 'Cliquez pour parler';
-                    input.parentElement.style.position = 'relative';
-                    input.parentElement.appendChild(micBtn);
-                }}
-            }});
-        }}, 500);
-        </script>
-        """, unsafe_allow_html=True)
-    
-    return prompt
+    *Fonctionnalité native du navigateur - aucune config requise*
+    """)
+
+# Appeler cette fonction dans la sidebar
+with st.sidebar:
+    add_microphone_hint()
 
 def authenticate():
     """Gère l'authentification Admin vs Utilisateur"""
@@ -257,6 +114,7 @@ def get_username():
 # ─────────────────────────────────────────────────────────────
 if not authenticate():
     st.stop()
+
 def hide_streamlit_menu():
     """Masque le menu Streamlit pour les non-admins"""
     if not is_admin():
@@ -272,9 +130,52 @@ def hide_streamlit_menu():
             header {visibility: hidden;}
             </style>
             """, unsafe_allow_html=True)
+        
+st.components.v1.html("""
+<script>
+// Injecter un bouton microphone global (méthode compatible Streamlit Cloud)
+setTimeout(() => {
+    const addMicToInputs = () => {
+        document.querySelectorAll('input[data-baseweb="input"]').forEach(input => {
+            if (!input.dataset.micAdded && input.placeholder?.toLowerCase().includes('question')) {
+                input.dataset.micAdded = 'true';
+                const container = input.parentElement;
+                container.style.position = 'relative';
+                
+                const mic = document.createElement('span');
+                mic.innerHTML = '🎤';
+                mic.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;opacity:0.7;';
+                mic.title = 'Dictée vocale (Chrome: Ctrl+Shift+.)';
+                
+                mic.onclick = () => {
+                    // Lance la dictée native du navigateur
+                    if ('webkitSpeechRecognition' in window) {
+                        const r = new webkitSpeechRecognition();
+                        r.lang = 'fr-FR';
+                        r.onresult = e => { input.value = e.results[0][0].transcript; };
+                        r.start();
+                    } else {
+                        alert('Utilisez Chrome pour la dictée vocale 🎤');
+                    }
+                };
+                
+                container.appendChild(mic);
+            }
+        });
+    };
+    
+    // Observer les changements DOM de Streamlit
+    const observer = new MutationObserver(addMicToInputs);
+    observer.observe(document.body, { childList: true, subtree: true });
+    addMicToInputs(); // Premier appel
+}, 2000);
+</script>
+""", height=1)       
 
 # Appliquer le CSS
 hide_streamlit_menu()
+
+
 
 
 # ─────────────────────────────────────────────────────────────
