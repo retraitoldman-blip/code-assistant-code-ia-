@@ -5,6 +5,171 @@ from groq import Groq
 from datetime import datetime
 import json 
 
+# ─────────────────────────────────────────────────────────────
+# 🎤 COMPOSANT SPEECH-TO-TEXT (Web Speech API)
+# ─────────────────────────────────────────────────────────────
+
+def speech_to_text_input(key="speech_input"):
+    """
+    Crée un champ de texte avec bouton microphone pour la reconnaissance vocale.
+    Utilise l'API Web Speech native du navigateur.
+    """
+    
+    # HTML + JavaScript pour la reconnaissance vocale
+    st.markdown("""
+        <style>
+        .stTextInput input {
+            padding-right: 50px !important;
+        }
+        .mic-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px;
+            z-index: 100;
+        }
+        .mic-btn.listening {
+            color: #ff4444;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.2); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+        </style>
+        
+        <script>
+        // Fonction pour initialiser la reconnaissance vocale
+        function initSpeechRecognition(inputId) {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("❌ Votre navigateur ne supporte pas la reconnaissance vocale.\n\nUtilisez Chrome, Edge ou Safari.");
+                return;
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.lang = 'fr-FR';  // Langue française
+            recognition.interimResults = true;
+            recognition.continuous = false;
+            
+            let isListening = false;
+            let inputElement = document.querySelector(`input[id*="${inputId}"]`);
+            
+            if (!inputElement) {
+                // Essaye de trouver l'input par label
+                const labels = document.querySelectorAll('label');
+                for (let label of labels) {
+                    if (label.textContent.includes('Question') || label.textContent.includes('question')) {
+                        inputElement = label.nextElementSibling?.querySelector('input');
+                        if (inputElement) break;
+                    }
+                }
+            }
+            
+            recognition.onstart = function() {
+                isListening = true;
+                const micBtn = document.querySelector(`.mic-btn[data-target="${inputId}"]`);
+                if (micBtn) micBtn.classList.add('listening');
+            };
+            
+            recognition.onresult = function(event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                if (inputElement) {
+                    // Met à jour la valeur et déclenche l'événement change pour Streamlit
+                    inputElement.value = transcript;
+                    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            };
+            
+            recognition.onend = function() {
+                isListening = false;
+                const micBtn = document.querySelector(`.mic-btn[data-target="${inputId}"]`);
+                if (micBtn) micBtn.classList.remove('listening');
+            };
+            
+            recognition.onerror = function(event) {
+                console.error("Erreur reconnaissance vocale:", event.error);
+                isListening = false;
+                const micBtn = document.querySelector(`.mic-btn[data-target="${inputId}"]`);
+                if (micBtn) micBtn.classList.remove('listening');
+                if (event.error === 'not-allowed') {
+                    alert("❌ Microphone bloqué. Veuillez autoriser l'accès au micro.");
+                }
+            };
+            
+            // Toggle écoute
+            function toggleListening() {
+                if (!inputElement) {
+                    alert("⚠️ Champ de texte non trouvé. Veuillez recharger la page.");
+                    return;
+                }
+                if (isListening) {
+                    recognition.stop();
+                } else {
+                    // Demande la permission microphone
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(() => recognition.start())
+                        .catch(err => {
+                            console.error("Erreur microphone:", err);
+                            alert("❌ Impossible d'accéder au microphone. Vérifiez les permissions.");
+                        });
+                }
+            }
+            
+            // Attache la fonction au bouton microphone
+            const micBtn = document.querySelector(`.mic-btn[data-target="${inputId}"]`);
+            if (micBtn) {
+                micBtn.onclick = toggleListening;
+            }
+            
+            return { recognition, toggleListening };
+        }
+        
+        // Initialisation au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            // Délai pour laisser Streamlit rendre les éléments
+            setTimeout(() => {
+                initSpeechRecognition("${key}");
+            }, 1000);
+        });
+        </script>
+        """, unsafe_allow_html=True)
+    
+    # Champ de texte Streamlit avec bouton microphone injecté via JS
+    prompt = st.chat_input("Pose ta question... (ou clique sur 🎤 pour parler)", key=key)
+    
+    # Injecte le bouton microphone après le rendu du champ
+    st.markdown(f"""
+        <script>
+        setTimeout(() => {{
+            const inputs = document.querySelectorAll('input[id*="{key}"]');
+            inputs.forEach(input => {{
+                if (!input.parentElement.querySelector('.mic-btn')) {{
+                    const micBtn = document.createElement('button');
+                    micBtn.className = 'mic-btn';
+                    micBtn.setAttribute('data-target', '{key}');
+                    micBtn.innerHTML = '🎤';
+                    micBtn.title = 'Cliquez pour parler';
+                    input.parentElement.style.position = 'relative';
+                    input.parentElement.appendChild(micBtn);
+                }}
+            }});
+        }}, 500);
+        </script>
+        """, unsafe_allow_html=True)
+    
+    return prompt
+
 def authenticate():
     """Gère l'authentification Admin vs Utilisateur"""
     
