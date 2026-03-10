@@ -397,7 +397,7 @@ if "auto_analyze_prompt" in st.session_state:
     del st.session_state.auto_analyze_prompt  # Nettoyer après utilisation
     auto_trigger = True
 else:
-    prompt = st.chat_input("Pose ta question ou analyse un fichier...")
+    prompt = speech_to_text_input(key="user_question")
     auto_trigger = False
 
 # Si prompt existe (manuel ou auto)
