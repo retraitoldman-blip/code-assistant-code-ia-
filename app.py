@@ -1,8 +1,98 @@
+
+
 import streamlit as st
 from groq import Groq
 from datetime import datetime
 import json 
 
+def authenticate():
+    """Gère l'authentification Admin vs Utilisateur"""
+    
+    def login_submitted():
+        """Vérifie les identifiants"""
+        entered_code = st.session_state.get("login_code", "")
+        
+        # Vérifie si c'est l'admin
+        if entered_code == st.secrets.get("admin_password", ""):
+            st.session_state["authenticated"] = True
+            st.session_state["is_admin"] = True
+            st.session_state["username"] = "Administrateur"
+            st.success("✅ Connecté en tant qu'Administrateur")
+        # Vérifie si c'est un utilisateur valide
+        elif entered_code in st.secrets.get("user_codes", ["PUBLIC2026"]):
+            st.session_state["authenticated"] = True
+            st.session_state["is_admin"] = False
+            st.session_state["username"] = "Utilisateur"
+            st.success("✅ Connecté en tant qu'Utilisateur")
+        else:
+            st.session_state["authenticated"] = False
+            st.error("❌ Code incorrect. Veuillez réessayer.")
+    
+    def logout():
+        """Déconnecte l'utilisateur"""
+        st.session_state["authenticated"] = False
+        st.session_state["is_admin"] = False
+        st.session_state["username"] = None
+        st.rerun()
+    
+    # Initialisation
+    if "authenticated" not in st.session_state:
+        st.session_state["authenticated"] = False
+        st.session_state["is_admin"] = False
+        st.session_state["username"] = None
+    
+    # Si déjà authentifié, affiche le bouton de déconnexion
+    if st.session_state["authenticated"]:
+        col1, col2 = st.columns([6, 1])
+        with col1:
+            st.write(f"👤 **{st.session_state['username']}**")
+        with col2:
+            if st.button("🚪 Déconnexion", key="logout_btn"):
+                logout()
+        return True
+    
+    # Si pas authentifié, affiche le formulaire de connexion
+    else:
+        st.title("🔐 Connexion Requise")
+        st.write("Bienvenue sur **Mon Assistant Code IA** !")
+        st.write("Veuillez entrer votre code d'accès pour continuer.")
+        
+        st.divider()
+        
+        st.text_input(
+            "🔑 Code d'accès",
+            type="password",
+            on_change=login_submitted,
+            key="login_code",
+            placeholder="Entrez votre code ici",
+            label_visibility="collapsed"
+        )
+        
+        st.divider()
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info("💡 **Utilisateur Public**\n\nCode : `PUBLIC2026`")
+        with col2:
+            st.warning("🔒 **Administrateur**\n\nContactez le propriétaire")
+        
+        st.caption("🌍 Application accessible mondialement • Développé par Snoussi")
+        
+        return False
+
+def is_admin():
+    """Retourne True si l'utilisateur est admin"""
+    return st.session_state.get("is_admin", False)
+
+def get_username():
+    """Retourne le nom d'utilisateur"""
+    return st.session_state.get("username", "Inconnu")
+
+# ─────────────────────────────────────────────────────────────
+# 🔐 VÉRIFICATION D'AUTHENTIFICATION (À PLACER AVANT TOUT LE RESTE)
+# ─────────────────────────────────────────────────────────────
+if not authenticate():
+    st.stop()
 def check_password():
     """Version personnalisée"""
     
@@ -79,102 +169,70 @@ if "code_to_analyze" not in st.session_state:
 # 4. SIDEBAR
 # ─────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.header("⚙️ Configuration")
+    st.title("🤖 Assistant Code")
+    st.write(f"👤 {get_username()}")
     
-    # Clé API
-    if "groq_api_key" in st.secrets:
-        groq_key = st.secrets["groq_api_key"]
-        st.success("✅ Clé chargée")
-    else:
-        groq_key = st.text_input("🔑 Clé API Groq", type="password", placeholder="gsk_...")
-        if groq_key and groq_key.startswith("gsk_"):
-            st.success("✅ Clé valide")
-    
-    st.markdown("[Obtenir une clé](https://console.groq.com/keys)")
     st.divider()
     
-    # Nouveau Chat
+    # Choix du modèle
+    model_choice = st.selectbox(
+        "🧠 Modèle IA",
+        ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "mixtral-8x7b-32768", "openai/gpt-oss-20b"],
+        index=0
+    )
+    
+    st.divider()
+    
+    # Bouton Nouveau Chat
     if st.button("🗑️ Nouveau Chat", use_container_width=True):
-        st.session_state.messages = [{"role": "system", "content": "Tu es un expert en code Python."}]
-        st.rerun()
-    
-    # Modèle
-    model_choice = st.selectbox("🧠 Modèle", ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "openai/gpt-oss-20b"])
-    
-    st.divider()
-
-    if groq_key and groq_key.startswith("gsk_"):
-        if st.button("🧪 Tester la clé API", use_container_width=True):
-            try:
-                test_client = Groq(api_key=groq_key)
-                test_client.models.list()
-                st.success("✅ Clé API valide !")
-            except Exception as e:
-                st.error(f"❌ Clé invalide: {str(e)[:100]}")
-    
-    # 📊 Stats
-    st.subheader("📊 Statistiques")
-    stats = st.session_state.token_stats
-    c1, c2 = st.columns(2)
-    c1.metric("🔄 Requêtes", stats["requests"])
-    c1.metric("📥 Input", f"{stats['total_input']:,}")
-    c2.metric("📤 Output", f"{stats['total_output']:,}")
-    c2.metric("💰 Coût", f"${stats['total_cost']:.6f}")
-    st.caption(f"🕐 Depuis : {stats['last_reset']}")
-    
-    if st.button("🔄 Reset", use_container_width=True):
-        st.session_state.token_stats = {
-            "total_input": 0, "total_output": 0, "total_cost": 0.0,
-            "requests": 0, "last_reset": datetime.now().strftime("%Y-%m-%d %H:%M")
-        }
+        st.session_state.messages = []
+        st.session_state.token_stats = {"requests": 0, "total_input": 0, "total_output": 0, "total_cost": 0}
         st.rerun()
     
     st.divider()
-
-    #if st.button("📥 Exporter la conversation", use_container_width=True):
-        #try:
-            #import json  # Import local pour sécurité
-            #from datetime import datetime
-            #timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            
-            #st.download_button(
-                #label="📥 Télécharger JSON",
-                #data=json.dumps(st.session_state.messages, ensure_ascii=False, indent=2),
-                #file_name=f"conversation_{timestamp}.json",
-                #mime="application/json",
-                #use_container_width=True
-            #)
-        #except Exception as e:
-            #st.error(f"❌ Erreur export: {str(e)[:100]}")
     
-    # 📁 Upload
-    st.divider()
-    
-    # 📁 Upload de fichiers
+    # Upload de fichiers
     st.subheader("📁 Analyser un fichier")
-    uploaded_file = st.file_uploader("Choisissez un fichier", type=["py", "js", "html", "css", "json", "txt", "md"])
+    uploaded_file = st.file_uploader(
+        "Choisissez un fichier",
+        type=["py", "js", "html", "css", "json", "txt", "md"],
+        help="Formats supportés : Python, JavaScript, HTML, CSS, JSON, TXT, Markdown"
+    )
     
-    if uploaded_file is not None:
-        try:
-            content = uploaded_file.getvalue().decode("utf-8")
-            name = uploaded_file.name
-            ext = "." + name.split(".")[-1] if "." in name else ".txt"
-            st.session_state.code_to_analyze = {"name": name, "content": content, "extension": ext}
-            
-            with st.expander(f"👁️ {name}"):
-                st.code(content[:300] + "..." if len(content) > 300 else content, language=ext[1:])
-            
-            # ✅ BOUTON D'ANALYSE AUTOMATIQUE
-            if st.button("🔍 Analyser ce fichier", use_container_width=True, type="primary"):
-                # Définir le prompt automatique
-                st.session_state.auto_analyze_prompt = f"Peux-tu analyser ce fichier '{name}' : trouver les bugs potentiels, suggérer des améliorations, et expliquer ce qu'il fait ?"
-                st.rerun()
-            
-            if st.button("🗑️ Retirer", use_container_width=True):
-                st.session_state.code_to_analyze = None
-                st.rerun()
-        except:
-            st.error("❌ Fichier non lisible")
+    # ──────────────────────────────────────────────────────────
+    # 🔐 ÉLÉMENTS ADMIN SEULEMENT
+    # ──────────────────────────────────────────────────────────
+    
+    if is_admin():
+        st.divider()
+        st.subheader("🔐 Administration")
+        
+        # Statistiques
+        with st.expander("📊 Statistiques d'utilisation", expanded=True):
+            st.write(f"🔄 **Requêtes :** {st.session_state.token_stats.get('requests', 0)}")
+            st.write(f"📥 **Tokens entrants :** {st.session_state.token_stats.get('total_input', 0)}")
+            st.write(f"📤 **Tokens sortants :** {st.session_state.token_stats.get('total_output', 0)}")
+            st.write(f"💰 **Coût estimé :** ${st.session_state.token_stats.get('total_cost', 0):.4f}")
+        
+        # Gestion des utilisateurs
+        with st.expander("👥 Gestion Utilisateurs", expanded=False):
+            st.write("**Codes utilisateurs actifs :**")
+            for code in st.secrets.get("user_codes", ["PUBLIC2026"]):
+                st.text(f"• {code}")
+            st.caption("Pour ajouter/supprimer des codes, modifiez les secrets.")
+        
+        # Reset complet
+        st.divider()
+        if st.button("🔴 Reset Complet (Admin)", use_container_width=True, type="primary"):
+            st.session_state.messages = []
+            st.session_state.token_stats = {"requests": 0, "total_input": 0, "total_output": 0, "total_cost": 0}
+            st.session_state.code_to_analyze = None
+            st.success("✅ Données réinitialisées !")
+            st.rerun()
+        
+        # Info admin
+        st.divider()
+        st.caption("🔒 Accès Administrateur uniquement")
 
 # ─────────────────────────────────────────────────────────────
 # 5. AFFICHAGE DES MESSAGES (BOUCLE PROPRE)
@@ -265,5 +323,3 @@ if prompt:
             
         except Exception as e:
             st.error(f"❌ Erreur: {str(e)[:150]}")
-
-
