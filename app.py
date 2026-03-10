@@ -28,8 +28,8 @@ with st.sidebar:
         *Fonctionnalité du navigateur - zéro config*
         """)
 
-def authenticate():
-    """Gère l'authentification Admin vs Utilisateur"""
+    def authenticate():
+        """Gère l'authentification Admin vs Utilisateur"""
     
     def login_submitted():
         """Vérifie les identifiants"""
@@ -101,7 +101,7 @@ def authenticate():
         
         st.caption("🌍 Application accessible mondialement • Développé par Snoussi")
         
-        return False
+    return False
 
 def is_admin():
     """Retourne True si l'utilisateur est admin"""
