@@ -218,6 +218,7 @@ else:
     auto_trigger = False
 
 # Si prompt existe (manuel ou auto)
+groq_key = st.secrets.get("groq_api_key", "")
 if prompt:
     
     if not groq_key or not groq_key.startswith("gsk_"):
