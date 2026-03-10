@@ -93,6 +93,24 @@ def get_username():
 # ─────────────────────────────────────────────────────────────
 if not authenticate():
     st.stop()
+def hide_streamlit_menu():
+    """Masque le menu Streamlit pour les non-admins"""
+    if not is_admin():
+        st.markdown("""
+            <style>
+            /* Masquer le menu principal (3 points) */
+            #MainMenu {visibility: hidden;}
+            /* Masquer le bouton de déploiement */
+            .stDeployButton {display: none;}
+            /* Masquer le footer Streamlit */
+            footer {visibility: hidden;}
+            /* Masquer le bouton d'édition (stylo) */
+            header {visibility: hidden;}
+            </style>
+            """, unsafe_allow_html=True)
+
+# Appliquer le CSS
+hide_streamlit_menu()
 
 
 # ─────────────────────────────────────────────────────────────
