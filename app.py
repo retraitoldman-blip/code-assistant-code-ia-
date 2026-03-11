@@ -283,17 +283,17 @@ with st.sidebar:
     uploaded_file = st.file_uploader("📁 Analyser un fichier", type=["py", "js", "html", "css", "json", "txt", "md"])
     
     # 🎤 Astuce dictée vocale (APPEL de fonction, pas définition !)
-   st.info("""
-   **🎤 Dictée vocale (Méthode fiable)**
+    st.info("""
+    **🎤 Dictée vocale (Méthode fiable)**
 
-   🪟 **Windows** : Clique ici + `Win + H`  
-   🍎 **Mac** : Clique ici + `Fn + Fn` (2 fois)  
+    🪟 **Windows** : Clique ici + `Win + H`  
+    🍎 **Mac** : Clique ici + `Fn + Fn` (2 fois)  
 
-   → Parle, le texte s'écrit automatiquement !  
-   → Appuie sur **Entrée** pour envoyer à l'IA.
+    → Parle, le texte s'écrit automatiquement !  
+    → Appuie sur **Entrée** pour envoyer à l'IA.
 
-   *Fonctionne dans Streamlit Cloud ✅*
-   """)
+    *Fonctionne dans Streamlit Cloud ✅*
+    """)
 
     
     # Champ texte pour dictée (alternative)
