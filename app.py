@@ -70,6 +70,20 @@ def hide_streamlit_menu():
             footer {visibility: hidden;}
             header {visibility: hidden;}
             </style>""", unsafe_allow_html=True)
+st.markdown("""
+<style>
+/* Ajouter un indice visuel pour la dictée */
+.stChatInputContainer textarea {
+    padding-right: 40px !important;
+}
+.mic-hint::after {
+    content: " 🎤";
+    opacity: 0.6;
+    font-size: 0.9em;
+}
+</style>
+<div class="mic-hint"></div>
+""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # 3. VÉRIFICATION AUTHENTIFICATION (après définition des fonctions)
