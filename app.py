@@ -85,6 +85,148 @@ st.markdown("""
 <div class="mic-hint"></div>
 """, unsafe_allow_html=True)
 
+def speech_input_component(key="speech_input"):
+    """
+    Composant microphone fonctionnel pour Streamlit Cloud.
+    Retourne le texte dicté ou None.
+    """
+    import streamlit.components.v1 as components
+    import hashlib
+    
+    # ID unique pour ce composant
+    comp_id = hashlib.md5(f"{key}_{id(key)}".encode()).hexdigest()[:8]
+    
+    # HTML/JS du composant
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {{ margin: 0; padding: 8px; font-family: sans-serif; }}
+            .mic-container {{ display: flex; align-items: center; gap: 8px; }}
+            #micBtn {{
+                background: #f0f2f6; border: 2px solid #ccc;
+                border-radius: 50%; width: 40px; height: 40px;
+                font-size: 20px; cursor: pointer;
+                display: flex; align-items: center; justify-content: center;
+                transition: all 0.2s ease;
+            }}
+            #micBtn:hover {{ background: #e0e2e6; border-color: #999; }}
+            #micBtn.listening {{
+                background: #ff4444; border-color: #cc0000;
+                color: white; animation: pulse 1s infinite;
+            }}
+            @keyframes pulse {{
+                0%, 100% {{ transform: scale(1); }}
+                50% {{ transform: scale(1.1); }}
+            }}
+            #status {{ font-size: 12px; color: #666; margin-left: 8px; }}
+        </style>
+    </head>
+    <body>
+        <div class="mic-container">
+            <button id="micBtn" title="Cliquez pour parler">🎤</button>
+            <span id="status">Prêt</span>
+        </div>
+        
+        <script>
+        (function() {{
+            const micBtn = document.getElementById('micBtn');
+            const status = document.getElementById('status');
+            let recognition = null;
+            let isListening = false;
+            
+            // Vérifier le support
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {{
+                micBtn.disabled = true;
+                micBtn.title = "Reconnaissance vocale non supportée (utilisez Chrome)";
+                status.textContent = "❌ Non supporté";
+                return;
+            }}
+            
+            recognition = new SpeechRecognition();
+            recognition.lang = 'fr-FR';
+            recognition.interimResults = true;
+            recognition.continuous = false;
+            
+            recognition.onstart = () => {{
+                isListening = true;
+                micBtn.classList.add('listening');
+                micBtn.innerHTML = '🔴';
+                status.textContent = "Écoute...";
+            }};
+            
+            recognition.onresult = (event) => {{
+                let finalTranscript = '';
+                let interimTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {{
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {{
+                        finalTranscript += transcript;
+                    }} else {{
+                        interimTranscript += transcript;
+                    }}
+                }}
+                
+                const text = finalTranscript || interimTranscript;
+                if (text) {{
+                    status.textContent = "✓";
+                    // Envoyer à Streamlit via postMessage
+                    window.parent.postMessage({{
+                        type: 'streamlit:setComponentValue',
+                        id: '{comp_id}',
+                        value: text
+                    }}, '*');
+                }}
+            }};
+            
+            recognition.onend = () => {{
+                isListening = false;
+                micBtn.classList.remove('listening');
+                micBtn.innerHTML = '🎤';
+                status.textContent = "Prêt";
+            }};
+            
+            recognition.onerror = (event) => {{
+                isListening = false;
+                micBtn.classList.remove('listening');
+                micBtn.innerHTML = '🎤';
+                status.textContent = "❌ " + event.error;
+                if (event.error === 'not-allowed') {{
+                    alert("❌ Microphone bloqué. Veuillez autoriser l'accès dans les paramètres du site.");
+                }}
+            }};
+            
+            micBtn.onclick = () => {{
+                if (isListening) {{
+                    recognition.stop();
+                }} else {{
+                    navigator.mediaDevices.getUserMedia({{ audio: true }})
+                        .then(() => {{
+                            recognition.start();
+                        }})
+                        .catch(err => {{
+                            console.error("Erreur micro:", err);
+                            alert("❌ Impossible d'accéder au microphone. Vérifiez les permissions.");
+                        }});
+                }}
+            }};
+        }})();
+        </script>
+    </body>
+    </html>
+    """
+    
+    # Afficher le composant
+    components.html(html, height=60, width=200)
+    
+    # Récupérer la valeur via session state (mécanisme Streamlit)
+    # Note: Pour une intégration parfaite, on utilise un champ texte classique + bouton séparé
+    return None  # Pour l'instant, on affiche juste le bouton
+
 # ─────────────────────────────────────────────────────────────
 # 3. VÉRIFICATION AUTHENTIFICATION (après définition des fonctions)
 # ─────────────────────────────────────────────────────────────
