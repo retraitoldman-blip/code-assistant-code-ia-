@@ -285,12 +285,12 @@ with st.sidebar:
     # 🎤 Astuce dictée vocale (APPEL de fonction, pas définition !)
     add_microphone_hint()
 
-    with st.sidebar:
+    
     # Champ texte pour dictée (alternative)
     speech_text = st.text_area(
-        "🎤 Dicte ici puis copie-colle :",
-        height=70,
-        placeholder="Clique ici, puis Ctrl+Shift+. pour parler..."
+    "🎤 Dicte ici puis copie-colle :",
+    height=70,
+    placeholder="Clique ici, puis Ctrl+Shift+. pour parler..."
     )
     
     if speech_text and st.button("➤ Envoyer la dictée", use_container_width=True):
